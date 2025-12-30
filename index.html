@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relógio</title>
+    <title>Relógio Local - Evento 2026</title>
     <style>
         /* DECLARAÇÃO DA FONTE PERSONALIZADA */
         @font-face {
@@ -27,7 +27,7 @@
             font-family: 'PowerOfDragon', sans-serif;
         }
 
-        /* CAMADA 1: FUNDO PADRÃO (Estático ou Inicial) */
+        /* CAMADA 1: FUNDO PADRÃO */
         .bg-container {
             position: fixed;
             top: 0;
@@ -41,35 +41,32 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* CAMINHO DA TUA IMAGEM DE FUNDO PADRÃO */
+            /* CAMINHO DA IMAGEM DE FUNDO PADRÃO */
             background-image: url(''); 
             background-position: center;
             background-size: cover;
             display: block; 
         }
 
-        /* CAMADA 2: GIF ESPECIAL DE MEIA-NOITE */
-        #special-gif-container {
+        /* CAMADA 2: VÍDEO ESPECIAL (LOOP) */
+        #special-video-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 2; /* Fica entre o fundo inicial e os números */
+            z-index: 2;
             display: none; 
+            background: #000;
         }
 
-        #special-gif {
+        #special-video {
             width: 100%;
             height: 100%;
-            /* COLOQUE O CAMINHO DA SUA GIF AQUI */
-            background-image: url('a.gif');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            object-fit: cover;
         }
 
-        /* CAMADA 3: INTERFACE DO RELÓGIO (Sempre no topo) */
+        /* CAMADA 3: INTERFACE DO RELÓGIO */
         .container {
             position: relative;
             z-index: 3;
@@ -79,9 +76,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            /* Overlay inicial suave */
-            background: rgba(0, 0, 0, 0.2); 
-            transition: background 1.5s ease;
+            background: rgba(0, 0, 0, 0.3); 
+            transition: background 2s ease;
         }
 
         .clock {
@@ -97,7 +93,7 @@
             background: rgba(15, 15, 15, 0.85);
             border-radius: 10px;
             overflow: hidden; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
         .digit-wrapper {
@@ -117,10 +113,9 @@
             align-items: center;
             font-size: 10rem;
             color: #fff;
-            text-shadow: 0 0 20px rgba(0,0,0,1); /* Garante leitura sobre a GIF */
+            text-shadow: 0 0 25px rgba(0,0,0,1);
         }
 
-        /* ANIMAÇÃO DE QUEDA (Top to Bottom) */
         .slide-down {
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             transform: translateY(50%);
@@ -144,7 +139,6 @@
             text-shadow: 0 2px 8px rgba(0,0,0,1);
         }
 
-        /* Ajustes Mobile */
         @media (max-width: 768px) {
             .digit-container { width: 80px; height: 120px; }
             .digit { height: 120px; font-size: 5.5rem; }
@@ -154,17 +148,16 @@
 </head>
 <body>
 
-    <!-- FUNDO ESTÁTICO INICIAL -->
     <div class="bg-container">
         <div class="bg-image"></div>
     </div>
 
-    <!-- GIF DE MEIA-NOITE -->
-    <div id="special-gif-container">
-        <div id="special-gif"></div>
+    <div id="special-video-container">
+        <video id="special-video" loop playsinline>
+            <source src="a.mp4" type="video/mp4">
+        </video>
     </div>
 
-    <!-- INTERFACE DO RELÓGIO -->
     <div class="container" id="main-ui">
         <div class="clock">
             <div class="digit-container" id="hour">
@@ -188,25 +181,28 @@
                 </div>
             </div>
         </div>
+        <div class="label" id="date-label">Horário Local</div>
     </div>
 
     <script>
-        let isGifActive = false;
+        let isVideoActive = false;
+        let isFinished = false;
 
-        function activateMidnightGif() {
-            if (isGifActive) return;
-            isGifActive = true;
+        function activateMidnightVideo() {
+            if (isVideoActive) return;
+            isVideoActive = true;
 
-            const gifContainer = document.getElementById('special-gif-container');
+            const videoContainer = document.getElementById('special-video-container');
+            const videoElement = document.getElementById('special-video');
             const mainUI = document.getElementById('main-ui');
 
-            // Exibe a GIF (z-index 2) atrás do relógio (z-index 3)
-            gifContainer.style.display = 'block';
-            
-            // Torna o fundo do relógio transparente para ver a GIF claramente
+            videoContainer.style.display = 'block';
             mainUI.style.background = 'transparent';
-            
-            console.log("Evento de meia-noite activado: GIF permanente iniciada.");
+
+            videoElement.play().catch(error => {
+                videoElement.muted = true;
+                videoElement.play();
+            });
         }
 
         function updateDigit(id, newValue) {
@@ -226,25 +222,30 @@
         }
 
         function tick() {
-            const options = {
-                timeZone: 'America/Sao_Paulo',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            };
+            if (isFinished) return;
 
             const now = new Date();
-            const formatter = new Intl.DateTimeFormat('pt-BR', options);
-            const parts = formatter.formatToParts(now);
             
-            const h = parts.find(p => p.type === 'hour').value;
-            const m = parts.find(p => p.type === 'minute').value;
-            const s = parts.find(p => p.type === 'second').value;
+            // Define o alvo: 01 de Janeiro de 2026, 00:00:00 (Local)
+            const targetDate = new Date(2026, 0, 1, 0, 0, 0);
 
-            // Verificação de Meia-Noite
-            if (h === "15" && m === "17" && s === "00") {
-                activateMidnightGif();
+            if (now >= targetDate) {
+                isFinished = true;
+                updateDigit('hour', '00');
+                updateDigit('min', '00');
+                updateDigit('sec', '00');
+                activateMidnightVideo();
+                return;
+            }
+
+            // Formatação baseada na hora local do computador
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+
+            // Gatilho visual para qualquer meia-noite
+            if (h === "00" && m === "00" && s === "00") {
+                activateMidnightVideo();
             }
 
             updateDigit('hour', h);
@@ -252,21 +253,37 @@
             updateDigit('sec', s);
         }
 
-        // Setup Inicial dos Números
-        const initial = new Intl.DateTimeFormat('pt-BR', {
-            timeZone: 'America/Sao_Paulo',
-            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-        }).formatToParts(new Date());
+        function init() {
+            const now = new Date();
+            const targetDate = new Date(2026, 0, 1, 0, 0, 0);
+            
+            if (now >= targetDate) {
+                isFinished = true;
+                activateMidnightVideo();
+            }
 
-        document.querySelectorAll('.current, .next').forEach(el => {
-            const type = el.closest('.digit-container').id;
-            const val = initial.find(p => p.type === (type === 'hour' ? 'hour' : type === 'min' ? 'minute' : 'second')).value;
-            el.innerText = val;
-        });
+            const h = isFinished ? '00' : String(now.getHours()).padStart(2, '0');
+            const m = isFinished ? '00' : String(now.getMinutes()).padStart(2, '0');
+            const s = isFinished ? '00' : String(now.getSeconds()).padStart(2, '0');
 
-        // Loop de actualização
+            document.getElementById('hour').querySelector('.current').innerText = h;
+            document.getElementById('hour').querySelector('.next').innerText = h;
+            
+            document.getElementById('min').querySelector('.current').innerText = m;
+            document.getElementById('min').querySelector('.next').innerText = m;
+            
+            document.getElementById('sec').querySelector('.current').innerText = s;
+            document.getElementById('sec').querySelector('.next').innerText = s;
+        }
+
+        init();
         setInterval(tick, 1000);
+
+        // Habilita áudio se o vídeo já estiver ativo ao clicar
+        document.body.addEventListener('click', () => {
+            const videoElement = document.getElementById('special-video');
+            if (isVideoActive) videoElement.muted = false;
+        }, { once: true });
     </script>
 </body>
 </html>
-
