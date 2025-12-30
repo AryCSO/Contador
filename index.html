@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relógio Brasília - Sobreposição Meia-Noite</title>
+    <style>
+        /* DECLARAÇÃO DA FONTE PERSONALIZADA */
+        @font-face {
+            font-family: 'PowerOfDragon';
+            src: url('PowerofDragon-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'PowerOfDragon', sans-serif;
+        }
+
+        /* 1. PLANO DE FUNDO PADRÃO (Z-INDEX 1) */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .bg-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* COLOQUE O LINK DA IMAGEM DE FUNDO PADRÃO AQUI */
+            background-image: url(''); 
+            background-position: center;
+            background-size: cover;
+            display: block; 
+        }
+
+        /* 2. VÍDEO ESPECIAL DE MEIA-NOITE (Z-INDEX 2) */
+        #special-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2; /* Fica entre o fundo e o relógio */
+            background: #000;
+            display: none; 
+        }
+
+        #special-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 3. INTERFACE DO RELÓGIO (Z-INDEX 3) */
+        .container {
+            position: relative;
+            z-index: 3; /* Sempre por cima de tudo */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* Overlay suave para legibilidade, pode ser ajustado ou removido */
+            background: rgba(0, 0, 0, 0.2); 
+            transition: background 1s ease;
+        }
+
+        .clock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .digit-container {
+            position: relative;
+            width: 140px;
+            height: 180px;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 8px;
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .digit-wrapper {
+            position: absolute;
+            width: 100%;
+            height: 200%;
+            top: -100%; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .digit {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10rem;
+            color: #fff;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+        }
+
+        .slide-down {
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            transform: translateY(50%);
+        }
+
+        .separator {
+            font-size: 6rem;
+            color: #fff;
+            padding-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .label {
+            margin-top: 35px;
+            color: #fff;
+            font-size: 1.3rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-family: Arial, sans-serif;
+            opacity: 0.8;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 768px) {
+            .digit-container { width: 75px; height: 110px; }
+            .digit { height: 110px; font-size: 5rem; }
+            .separator { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CAMADA 1: FUNDO PADRÃO -->
+    <div class="bg-container">
+        <div class="bg-image"></div>
+    </div>
+
+    <!-- CAMADA 2: VÍDEO ESPECIAL -->
+    <div id="special-video-container">
+        <!-- COLOQUE O CAMINHO DO SEU VÍDEO ABAIXO -->
+        <video id="special-video" playsinline>
+            <source src="CAMINHO_DO_SEU_VIDEO_AQUI.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- CAMADA 3: RELÓGIO -->
+    <div class="container" id="main-ui">
+        <div class="clock">
+            <div class="digit-container" id="hour">
+                <div class="digit-wrapper">
+                    <div class="digit next">00</div>
+                    <div class="digit current">00</div>
+                </div>
+            </div>
+            <div class="separator">:</div>
+            <div class="digit-container" id="min">
+                <div class="digit-wrapper">
+                    <div class="digit next">00</div>
+                    <div class="digit current">00</div>
+                </div>
+            </div>
+            <div class="separator">:</div>
+            <div class="digit-container" id="sec">
+                <div class="digit-wrapper">
+                    <div class="digit next">00</div>
+                    <div class="digit current">00</div>
+                </div>
+            </div>
+        </div>
+        <div class="label">Horário de Brasília</div>
+    </div>
+
+    <script>
+        let videoTriggered = false;
+
+        function playMidnightVideo() {
+            if (videoTriggered) return;
+            videoTriggered = true;
+
+            const videoContainer = document.getElementById('special-video-container');
+            const videoElement = document.getElementById('special-video');
+            const mainUI = document.getElementById('main-ui');
+
+            // Mostra o container do vídeo (que está atrás do relógio devido ao z-index 2)
+            videoContainer.style.display = 'block';
+            
+            // Remove o overlay escuro do relógio para ver o vídeo claramente
+            mainUI.style.background = 'transparent';
+
+            videoElement.play().catch(e => {
+                console.log("Play automático bloqueado. Ative o som com um clique.");
+                videoElement.muted = true;
+                videoElement.play();
+            });
+
+            videoElement.onended = () => {
+                videoContainer.style.display = 'none';
+                mainUI.style.background = 'rgba(0, 0, 0, 0.2)';
+                setTimeout(() => { videoTriggered = false; }, 2000);
+            };
+        }
+
+        function updateDigit(id, newValue) {
+            const container = document.getElementById(id);
+            const wrapper = container.querySelector('.digit-wrapper');
+            const currentDiv = wrapper.querySelector('.current');
+            const nextDiv = wrapper.querySelector('.next');
+            
+            if (newValue !== currentDiv.innerText) {
+                nextDiv.innerText = newValue;
+                wrapper.classList.add('slide-down');
+                setTimeout(() => {
+                    currentDiv.innerText = newValue;
+                    wrapper.classList.remove('slide-down');
+                }, 600);
+            }
+        }
+
+        function tick() {
+            const options = {
+                timeZone: 'America/Sao_Paulo',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('pt-BR', options);
+            const parts = formatter.formatToParts(now);
+            
+            const h = parts.find(p => p.type === 'hour').value;
+            const m = parts.find(p => p.type === 'minute').value;
+            const s = parts.find(p => p.type === 'second').value;
+
+            // Gatilho de meia-noite
+            if (h === "00" && m === "00" && s === "00") {
+                playMidnightVideo();
+            }
+
+            updateDigit('hour', h);
+            updateDigit('min', m);
+            updateDigit('sec', s);
+        }
+
+        // Inicialização dos valores
+        const initial = new Intl.DateTimeFormat('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        }).formatToParts(new Date());
+
+        document.querySelectorAll('.current, .next').forEach(el => {
+            const type = el.closest('.digit-container').id;
+            const val = initial.find(p => p.type === (type === 'hour' ? 'hour' : type === 'min' ? 'minute' : 'second')).value;
+            el.innerText = val;
+        });
+
+        setInterval(tick, 1000);
+
+        // Permitir áudio após interação
+        document.body.addEventListener('click', () => {
+            const videoElement = document.getElementById('special-video');
+            if (videoTriggered) videoElement.muted = false;
+        }, { once: true });
+    </script>
+</body>
+</html>
