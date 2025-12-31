@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relógio Local - Fade Transition</title>
     <style>
-        /* DECLARAÇÃO DA FONTE PERSONALIZADA */
         @font-face {
             font-family: 'PowerOfDragon';
             src: url('PowerofDragon-Regular.ttf') format('truetype');
@@ -27,7 +26,6 @@
             font-family: 'PowerOfDragon', sans-serif;
         }
 
-        /* CAMADA 1: FUNDO PADRÃO */
         .bg-container {
             position: fixed;
             top: 0;
@@ -50,24 +48,20 @@
             transform: translate(-50%, -50%);
         }
 
-        /* CAMADA 2: VÍDEO ESPECIAL (LOOP) */
         #special-video-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 2; /* Fica acima do vídeo padrão */
-            
-            /* LÓGICA DO FADE (DEGRADÊ) */
-            opacity: 0; /* Começa invisível */
-            visibility: hidden; /* Garante que não seja clicável enquanto invisível */
-            transition: opacity 3s ease-in-out, visibility 3s ease-in-out; /* A mágica acontece aqui: 3 segundos de transição */
+            z-index: 2;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 3s ease-in-out, visibility 3s ease-in-out;
             
             background: #000;
         }
 
-        /* Classe que será ativada pelo JS */
         #special-video-container.active {
             opacity: 1;
             visibility: visible;
@@ -79,7 +73,6 @@
             object-fit: cover;
         }
 
-        /* CAMADA 3: INTERFACE DO RELÓGIO */
         .container {
             position: relative;
             z-index: 3;
@@ -90,7 +83,6 @@
             justify-content: center;
             align-items: center;
             background: rgba(0, 0, 0, 0.4); 
-            /* Adicionamos transição aqui também para o fundo escuro sumir suavemente */
             transition: background 3s ease; 
         }
 
@@ -163,14 +155,12 @@
 <body>
 
     <div class="bg-container">
-        <!-- VÍDEO PADRÃO (FUNDO 1) -->
         <video autoplay loop muted playsinline>
             <source src="aa.mp4" type="video/mp4">
         </video>
     </div>
 
     <div id="special-video-container">
-        <!-- VÍDEO ESPECIAL (FUNDO 2 - ENTRA COM FADE) -->
         <video id="special-video" loop playsinline>
             <source src="a.mp4" type="video/mp4">
         </video>
@@ -198,7 +188,8 @@
                     <div class="digit current">00</div>
                 </div>
             </div>
-        </div>
+        </div>
+
     </div>
 
     <script>
@@ -213,17 +204,13 @@
             const videoElement = document.getElementById('special-video');
             const mainUI = document.getElementById('main-ui');
 
-            // 1. Dá o play no vídeo antes dele aparecer (para não aparecer travado)
             videoElement.play().catch(error => {
                 videoElement.muted = true;
                 videoElement.play();
             });
 
-            // 2. Adiciona a classe que dispara a transição CSS (opacity 0 -> 1)
-            // Isso fará o "Cross-fade" sobre o vídeo antigo
             videoContainer.classList.add('active');
             
-            // 3. Remove suavemente o fundo escuro da UI
             mainUI.style.background = 'transparent';
         }
 
@@ -248,7 +235,6 @@
 
             const now = new Date();
             
-            // ALVO: 01 de Janeiro de 2026, 00:00:00
             const targetDate = new Date(2026, 0, 1, 0, 0, 0);
 
             if (now >= targetDate) {
@@ -307,3 +293,4 @@
     </script>
 </body>
 </html>
+
